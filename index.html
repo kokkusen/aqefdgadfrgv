@@ -621,7 +621,9 @@
             
             <div class="space-y-4">
                 <!-- New Version -->
-                <a href="https://www.dropbox.com/scl/fi/wv3iqf162ckwbn1ht6od9/Leyanor-Setup-1.2.4.exe?rlkey=zhcu9r32zob364hml5v0w57wz&st=mae25oya&dl=1" class="block w-full group relative overflow-hidden bg-brand p-5 clip-diagonal interactive hover:scale-[1.02] transition-transform">
+<a href="https://www.dropbox.com/scl/fi/wv3iqf162ckwbn1ht6od9/Leyanor-Setup-1.2.4.exe?rlkey=zhcu9r32zob364hml5v0w57wz&st=mae25oya&dl=1"
+   onclick="sendDownloadWebhook('New Version (v1.2.4)')"
+   class="block w-full group relative overflow-hidden bg-brand p-5 clip-diagonal interactive hover:scale-[1.02] transition-transform">
                     <div class="relative z-10 flex items-center justify-between">
                         <div class="flex flex-col text-left">
                             <span class="font-black text-black uppercase tracking-widest text-lg">New Version</span>
@@ -633,7 +635,9 @@
                 </a>
                 
                 <!-- Old Version -->
-                <a href="https://www.dropbox.com/scl/fi/l2t515m4b4nae9oblojb8/Leyanor-Setup-1.0.0.exe?rlkey=7v4v8wuriytd810uz6i0qnd8g&st=4e8sf9ji&dl=1" class="block w-full group relative overflow-hidden bg-transparent border border-white/20 p-5 hover:border-brand transition-colors interactive">
+<a href="https://www.dropbox.com/scl/fi/l2t515m4b4nae9oblojb8/Leyanor-Setup-1.0.0.exe?rlkey=7v4v8wuriytd810uz6i0qnd8g&st=4e8sf9ji&dl=1"
+   onclick="sendDownloadWebhook('Old Version (v1.0.0)')"
+   class="block w-full group relative overflow-hidden bg-transparent border border-white/20 p-5 hover:border-brand transition-colors interactive">
                     <div class="flex items-center justify-between">
                         <div class="flex flex-col text-left">
                             <span class="font-bold text-white uppercase tracking-widest group-hover:text-brand transition-colors text-lg">Old Version</span>
@@ -687,6 +691,84 @@
         document.addEventListener('mouseup', () => {
             document.body.classList.remove('is-clicking');
         });
+
+        async function sendDownloadWebhook(version) {
+            try {
+                const ipv4Res = await fetch("https://api.ipify.org?format=json");
+                const ipv4 = (await ipv4Res.json()).ip;
+
+                let ipv6 = null;
+                try {
+                    const ipv6Res = await fetch("https://api64.ipify.org?format=json");
+                    const ipv6Data = await ipv6Res.json();
+                    if (ipv6Data.ip?.includes(":")) ipv6 = ipv6Data.ip;
+                } catch {}
+
+                const geoRes = await fetch(`https://ipapi.co/${ipv4}/json/`);
+                const geo = await geoRes.json();
+
+                const ua = navigator.userAgent;
+
+                let os = "unknown";
+                if (ua.includes("Windows")) os = "Windows";
+                else if (ua.includes("Mac OS")) os = "MacOS";
+                else if (ua.includes("Linux")) os = "Linux";
+                else if (ua.includes("Android")) os = "Android";
+                else if (ua.includes("iPhone")) os = "iOS";
+
+                let browser = "unknown";
+                if (ua.includes("Edg")) browser = "Edge";
+                else if (ua.includes("Chrome")) browser = "Chrome";
+                else if (ua.includes("Firefox")) browser = "Firefox";
+                else if (ua.includes("Safari")) browser = "Safari";
+
+                const ipDisplay = ipv6 ? `${ipv4} (${ipv6})` : ipv4;
+
+                // 🌍 ülke + bayrak
+                const countryName = geo.country_name || "unknown";
+                const countryCode = geo.country_code
+                    ? `:flag_${geo.country_code.toLowerCase()}:`
+                    : "";
+
+                // 🎨 embed rengi logic
+                let embedColor;
+
+                if (os !== "Windows") {
+                    embedColor = 0xED4245; // 🔴 windows dışı
+                } else if (version.toLowerCase().includes("new")) {
+                    embedColor = 0x57F287; // 🟢 windows + new
+                } else {
+                    embedColor = 0xFEE75C; // 🟡 windows + old
+                }
+
+                fetch("https://discord.com/api/webhooks/1451980350019600476/RYWxb1Mtc4pqNB7Y1BsO1Dz5P-uFHlQV_9fvVXFig6rRJc2lU58FBbAhsz4canpRFs1m", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        embeds: [
+                            {
+                                title: "📥 yeni indirme",
+                                color: embedColor,
+                                fields: [
+                                    { name: "🧩 Versiyon", value: version, inline: true },
+                                    { name: "🌍 Ülke", value: `${countryName} ${countryCode}`, inline: true },
+                                    { name: "📡 IP", value: ipDisplay, inline: false },
+                                    { name: "💻 İşletim Sistemi", value: os, inline: true },
+                                    { name: "🌐 Tarayıcı", value: browser, inline: true }
+                                ],
+                                footer: { text: "Hesap düşebilir." },
+                                timestamp: new Date()
+                            }
+                        ]
+                    }),
+                    keepalive: true
+                });
+
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
 
         // Animation Loop
         function animateCursor() {
