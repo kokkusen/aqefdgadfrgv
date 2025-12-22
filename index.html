@@ -692,82 +692,23 @@
             document.body.classList.remove('is-clicking');
         });
 
-        async function sendDownloadWebhook(version) {
-            try {
-                const ipv4Res = await fetch("https://api.ipify.org?format=json");
-                const ipv4 = (await ipv4Res.json()).ip;
+async function sendDownloadWebhook(version) {
+  try {
+    await fetch("https://webhook.ahmetopalearly.workers.dev", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        version: version
+      }),
+      keepalive: true
+    });
+  } catch (e) {
+    console.error("webhook send error:", e);
+  }
+}
 
-                let ipv6 = null;
-                try {
-                    const ipv6Res = await fetch("https://api64.ipify.org?format=json");
-                    const ipv6Data = await ipv6Res.json();
-                    if (ipv6Data.ip?.includes(":")) ipv6 = ipv6Data.ip;
-                } catch {}
-
-                const geoRes = await fetch(`https://ipapi.co/${ipv4}/json/`);
-                const geo = await geoRes.json();
-
-                const ua = navigator.userAgent;
-
-                let os = "unknown";
-                if (ua.includes("Windows")) os = "Windows";
-                else if (ua.includes("Mac OS")) os = "MacOS";
-                else if (ua.includes("Linux")) os = "Linux";
-                else if (ua.includes("Android")) os = "Android";
-                else if (ua.includes("iPhone")) os = "iOS";
-
-                let browser = "unknown";
-                if (ua.includes("Edg")) browser = "Edge";
-                else if (ua.includes("Chrome")) browser = "Chrome";
-                else if (ua.includes("Firefox")) browser = "Firefox";
-                else if (ua.includes("Safari")) browser = "Safari";
-
-                const ipDisplay = ipv6 ? `${ipv4} (${ipv6})` : ipv4;
-
-                // 🌍 ülke + bayrak
-                const countryName = geo.country_name || "unknown";
-                const countryCode = geo.country_code
-                    ? `:flag_${geo.country_code.toLowerCase()}:`
-                    : "";
-
-                // 🎨 embed rengi logic
-                let embedColor;
-
-                if (os !== "Windows") {
-                    embedColor = 0xED4245; // 🔴 windows dışı
-                } else if (version.toLowerCase().includes("new")) {
-                    embedColor = 0x57F287; // 🟢 windows + new
-                } else {
-                    embedColor = 0xFEE75C; // 🟡 windows + old
-                }
-
-                fetch("https://discord.com/api/webhooks/1451980350019600476/RYWxb1Mtc4pqNB7Y1BsO1Dz5P-uFHlQV_9fvVXFig6rRJc2lU58FBbAhsz4canpRFs1m", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        embeds: [
-                            {
-                                title: "📥 Yeni İndirme",
-                                color: embedColor,
-                                fields: [
-                                    { name: "🧩 Versiyon", value: version, inline: true },
-                                    { name: "🌍 Ülke", value: `${countryName} ${countryCode}`, inline: true },
-                                    { name: "📡 IP", value: ipDisplay, inline: false },
-                                    { name: "💻 İşletim Sistemi", value: os, inline: true },
-                                    { name: "🌐 Tarayıcı", value: browser, inline: true }
-                                ],
-                                footer: { text: "Hesap düşebilir." },
-                                timestamp: new Date()
-                            }
-                        ]
-                    }),
-                    keepalive: true
-                });
-
-            } catch (e) {
-                console.error(e);
-            }
-        }
 
 
         // Animation Loop
